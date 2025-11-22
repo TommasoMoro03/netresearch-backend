@@ -26,6 +26,9 @@ wheels/
 # FastAPI
 .pytest_cache/
 
+# Environment variables
+.env
+
 # IDEs
 .vscode/
 .idea/
