@@ -22,3 +22,4 @@ class AgentContext(BaseModel):
     # Extracted information during execution
     filters: Optional[ExtractedFilters] = None
     papers_data: Optional[List[Dict[str, Any]]] = None  # Full OpenAlex papers JSON for later processing
+    professor_nodes: Optional[List[Any]] = None  # GraphNode objects for final graph (stored as dicts)

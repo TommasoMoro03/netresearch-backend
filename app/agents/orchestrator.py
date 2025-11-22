@@ -7,6 +7,7 @@ from typing import Optional
 from app.agents.models import AgentContext, ExtractedFilters
 from app.agents.intent_agent import IntentExtractionAgent
 from app.agents.search_agent import SearchAgent
+from app.agents.extraction_agent import ExtractionAgent
 from app.services.state_manager import state_manager
 from app.utils.paper_mapper import get_preview_papers
 
@@ -26,6 +27,7 @@ class ResearchAgentOrchestrator:
     def __init__(self):
         self.intent_agent = IntentExtractionAgent()
         self.search_agent = SearchAgent()
+        self.extraction_agent = ExtractionAgent()
 
     def run(self, context: AgentContext) -> None:
         """
@@ -46,8 +48,10 @@ class ResearchAgentOrchestrator:
             # Step 2: OpenAlex Search
             self._execute_search(context)
 
-            # TODO: Add remaining steps
             # Step 3: Data Extraction
+            self._execute_extraction(context)
+
+            # TODO: Add remaining steps
             # Step 4: Relationship Building
             # Step 5: Graph Construction
 
@@ -164,21 +168,57 @@ class ResearchAgentOrchestrator:
             )
             raise
 
-    def _add_placeholder_steps(self, context: AgentContext) -> None:
-        """Add placeholder steps for remaining pipeline stages."""
+    def _execute_extraction(self, context: AgentContext) -> None:
+        """
+        Step 3: Extract professors from papers.
+        """
         run_id = context.run_id
 
-        # Extraction step
-        time.sleep(1)
+        # Add initial "extraction" step (in_progress)
         state_manager.add_run_step(
             run_id=run_id,
             step_id="extraction-1",
             step_type="extraction",
-            message="Extracting entities and relationships...",
-            details=None,
-            sources=[],
-            status="done"
+            message="Extracting professors from papers...",
+            status="in_progress"
         )
+
+        time.sleep(1)  # Brief pause for UX
+
+        try:
+            # Extract professors using the agent
+            professor_nodes, basic_professors = self.extraction_agent.extract_professors(context)
+
+            # Store full professor nodes in context for final graph construction
+            context.professor_nodes = [node.model_dump() for node in professor_nodes]
+
+            # Convert BasicProfessor objects to dict for JSON serialization
+            basic_professors_dict = [prof.model_dump() for prof in basic_professors]
+
+            # Update the step to "done" with basic professors for display
+            state_manager.add_run_step(
+                run_id=run_id,
+                step_id="extraction-1",
+                step_type="extraction",
+                message=f"Extracted {len(basic_professors)} professors",
+                professors=basic_professors_dict,  # For frontend display
+                status="done"
+            )
+
+        except Exception as e:
+            # Mark extraction as done with error
+            state_manager.add_run_step(
+                run_id=run_id,
+                step_id="extraction-1",
+                step_type="extraction",
+                message=f"Failed to extract professors: {str(e)}",
+                status="done"
+            )
+            raise
+
+    def _add_placeholder_steps(self, context: AgentContext) -> None:
+        """Add placeholder steps for remaining pipeline stages."""
+        run_id = context.run_id
 
         # Relationships step
         time.sleep(1)

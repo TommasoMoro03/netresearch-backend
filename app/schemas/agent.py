@@ -25,6 +25,11 @@ class Paper(BaseModel):
     publication_year: Optional[int] = None
     topic: Optional[str] = None
 
+class BasicProfessor(BaseModel):
+    name: str
+    institution: Optional[str]
+    description: Optional[str] = None
+
 class StepLog(BaseModel):
     step_id: str
     step_type: Literal["intent", "filters", "search", "extraction", "relationships", "graph"]
@@ -36,7 +41,7 @@ class StepLog(BaseModel):
     details: Optional[Dict[str, Any]] = None  # Deprecated, use specific fields below
     filters: Optional[Dict[str, List[str]]] = None  # For "filters" step: {"topics": [...], "geographical_areas": [...]}
     papers: Optional[List[Paper]] = None  # For "search" step: list of papers found
-    sources: Optional[List[Source]] = None  # For "extraction" step: sources of information
+    professors: Optional[List[BasicProfessor]] = None  # For "extraction" step: professors associated to the papers, to be shown during reasoning
 
 
 class PersonHierarchy(BaseModel):

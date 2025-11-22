@@ -146,6 +146,81 @@ class OpenAlexClient:
         # Step 2: Search for works using concept IDs
         return self.search_works_by_concepts(concept_ids, per_page=per_page)
 
+    def extract_author_id(self, author_url: str) -> str:
+        """
+        Extract author ID from OpenAlex author URL.
+
+        Args:
+            author_url: Full URL like "https://openalex.org/A5068353058"
+
+        Returns:
+            Author ID like "A5068353058"
+        """
+        return author_url.split("/")[-1]
+
+    def get_author(self, author_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Get detailed author information by ID.
+
+        Args:
+            author_id: Author ID (e.g., "A5068353058")
+
+        Returns:
+            Author JSON data or None if error
+
+        API: GET /authors/{id}
+        """
+        # Clean the ID if it contains the full URL
+        if "/" in author_id:
+            author_id = self.extract_author_id(author_id)
+
+        url = f"{self.BASE_URL}/authors/{author_id}"
+
+        try:
+            response = self.session.get(url, timeout=10)
+            response.raise_for_status()
+            return response.json()
+
+        except requests.RequestException as e:
+            print(f"Error fetching author {author_id}: {e}")
+            return None
+
+    def get_author_works(
+        self,
+        author_id: str,
+        per_page: int = 3
+    ) -> Dict[str, Any]:
+        """
+        Get works (papers) by a specific author.
+
+        Args:
+            author_id: Author ID (e.g., "A5068353058")
+            per_page: Number of papers to return (default: 3)
+
+        Returns:
+            Raw JSON response with author's papers
+
+        API: GET /works?filter=author.id:{id}
+        """
+        # Clean the ID if it contains the full URL
+        if "/" in author_id:
+            author_id = self.extract_author_id(author_id)
+
+        url = f"{self.BASE_URL}/works"
+        params = {
+            "filter": f"author.id:{author_id}",
+            "per-page": per_page
+        }
+
+        try:
+            response = self.session.get(url, params=params, timeout=10)
+            response.raise_for_status()
+            return response.json()
+
+        except requests.RequestException as e:
+            print(f"Error fetching works for author {author_id}: {e}")
+            return {"results": [], "meta": {}}
+
 
 # Global client instance
 openalex_client = OpenAlexClient()
