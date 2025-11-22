@@ -1,6 +1,5 @@
 from pydantic import BaseModel
 from typing import List, Optional, Literal
-from datetime import datetime
 
 
 class AgentRunRequest(BaseModel):
@@ -21,19 +20,29 @@ class StepLog(BaseModel):
     timestamp: str
 
 
+class PersonHierarchy(BaseModel):
+    """Person within an entity (lab, organization, etc.)"""
+    full_name: str
+    role: str
+    contact: Optional[str] = None  # email or linkedin URL
+
+
 class GraphNode(BaseModel):
+    """Node in the research graph"""
     id: str
-    label: str
-    type: str  # "paper", "author", "concept", etc.
-    x: float
-    y: float
-    z: float
+    name: str
+    type: str  # "professor", "laboratory", "paper", "institution", etc.
+    description: str  # short description of the node
+    sources: List[str] = []  # URLs where info was found
+    contacts: List[str] = []  # email or website URLs
+    hierarchy: Optional[List[PersonHierarchy]] = None  # for entities like labs
 
 
 class GraphLink(BaseModel):
-    source: str
-    target: str
-    label: Optional[str] = None
+    """Link between two nodes"""
+    source: str  # node id
+    target: str  # node id
+    label: Optional[str] = None  # relationship type (e.g., "works_at", "collaborates_with")
 
 
 class GraphData(BaseModel):
