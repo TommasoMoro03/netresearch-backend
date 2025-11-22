@@ -2,30 +2,37 @@
 Utility functions for mapping OpenAlex author data to Professor/GraphNode objects.
 """
 from typing import List, Dict, Any, Optional
-from app.schemas.agent import GraphNode, BasicProfessor, Contact, Paper
+from app.schemas.agent import GraphNode, BasicProfessor, Contact, Paper, Institution
 from app.utils.paper_mapper import map_openalex_works_to_papers
 from app.utils.openalex_client import openalex_client
 
 
-def get_education_institution(author_data: Dict[str, Any]) -> Optional[str]:
+def get_education_institution(author_data: Dict[str, Any]) -> Optional[Institution]:
     """
-    Extract the education institution name from author's last_known_institutions.
+    Extract the education institution from author's last_known_institutions.
 
     Args:
         author_data: OpenAlex author JSON
 
     Returns:
-        Institution display_name or None
+        Institution object with id and name or None
     """
     institutions = author_data.get("last_known_institutions", [])
 
     for inst in institutions:
         if inst.get("type") == "education":
-            return inst.get("display_name")
+            inst_id = inst.get("id", "").split("/")[-1]  # Extract ID from URL
+            inst_name = inst.get("display_name")
+            if inst_id and inst_name:
+                return Institution(id=inst_id, name=inst_name)
 
     # If no education institution, return first institution
     if institutions:
-        return institutions[0].get("display_name")
+        inst = institutions[0]
+        inst_id = inst.get("id", "").split("/")[-1]
+        inst_name = inst.get("display_name")
+        if inst_id and inst_name:
+            return Institution(id=inst_id, name=inst_name)
 
     return None
 
@@ -68,7 +75,7 @@ def map_author_to_graph_node(
         h_index = summary_stats.get("h_index")
 
     # Create description
-    description = f"Researcher at {institution}" if institution else "Academic researcher"
+    description = f"Researcher at {institution.name}" if institution else "Academic researcher"
     if author_data.get("works_count"):
         description += f" with {author_data['works_count']} publications"
 

@@ -10,6 +10,8 @@ from app.agents.search_agent import SearchAgent
 from app.agents.extraction_agent import ExtractionAgent
 from app.services.state_manager import state_manager
 from app.utils.paper_mapper import get_preview_papers
+from app.utils.graph_builder import build_graph_links, create_user_node
+from app.schemas.agent import GraphData, GraphNode
 
 
 class ResearchAgentOrchestrator:
@@ -51,12 +53,11 @@ class ResearchAgentOrchestrator:
             # Step 3: Data Extraction
             self._execute_extraction(context)
 
-            # TODO: Add remaining steps
             # Step 4: Relationship Building
-            # Step 5: Graph Construction
+            self._execute_relationships(context)
 
-            # For now, add placeholder for remaining steps
-            self._add_placeholder_steps(context)
+            # Step 5: Graph Construction
+            self._execute_graph_construction(context)
 
             # Mark as completed
             state_manager.update_run_status(run_id, "completed")
@@ -216,38 +217,108 @@ class ResearchAgentOrchestrator:
             )
             raise
 
-    def _add_placeholder_steps(self, context: AgentContext) -> None:
-        """Add placeholder steps for remaining pipeline stages."""
+    def _execute_relationships(self, context: AgentContext) -> None:
+        """
+        Step 4: Build relationships between professors.
+        """
         run_id = context.run_id
 
-        # Relationships step
-        time.sleep(1)
+        # Add initial "relationships" step (in_progress)
         state_manager.add_run_step(
             run_id=run_id,
             step_id="relationships-1",
             step_type="relationships",
-            message="Building relationship graph...",
-            details=None,
-            sources=[],
-            status="done"
+            message="Analyzing relationships between professors...",
+            status="in_progress"
         )
 
-        # Graph construction step
-        time.sleep(1)
+        time.sleep(1)  # Brief pause for UX
+
+        try:
+            # Build links from professor nodes
+            if not context.professor_nodes:
+                raise ValueError("No professor nodes found for relationship building")
+
+            links = build_graph_links(context.professor_nodes)
+
+            # Store links in context (we'll combine with nodes in graph construction)
+            context.links = [link.model_dump() for link in links]
+
+            # Update the step to "done"
+            state_manager.add_run_step(
+                run_id=run_id,
+                step_id="relationships-1",
+                step_type="relationships",
+                message=f"Built {len(links)} relationships",
+                status="done"
+            )
+
+        except Exception as e:
+            # Mark relationships as done with error
+            state_manager.add_run_step(
+                run_id=run_id,
+                step_id="relationships-1",
+                step_type="relationships",
+                message=f"Failed to build relationships: {str(e)}",
+                status="done"
+            )
+            raise
+
+    def _execute_graph_construction(self, context: AgentContext) -> None:
+        """
+        Step 5: Construct final graph with nodes and links.
+        """
+        run_id = context.run_id
+
+        # Add initial "graph" step (in_progress)
         state_manager.add_run_step(
             run_id=run_id,
             step_id="graph-1",
             step_type="graph",
-            message="Constructing 3D graph visualization...",
-            details={"node_count": context.max_nodes},
-            sources=[],
-            status="done"
+            message="Building the final graph...",
+            status="in_progress"
         )
 
-        # Add mock graph data
-        from app.services.simulation_service import generate_mock_graph
-        graph_data = generate_mock_graph(context.max_nodes)
-        state_manager.set_run_graph(run_id, graph_data)
+        time.sleep(1)  # Brief pause for UX
+
+        try:
+            # Create User node
+            user_node = create_user_node()
+
+            # Combine all nodes (professors + user)
+            all_nodes = context.professor_nodes + [user_node.model_dump()]
+
+            # Get links from context
+            links = context.links if hasattr(context, 'links') else []
+
+            # Create GraphData
+            graph_data = GraphData(
+                nodes=[GraphNode(**node) for node in all_nodes],
+                links=links
+            )
+
+            # Store in state manager
+            state_manager.set_run_graph(run_id, graph_data.model_dump())
+
+            # Update the step to "done"
+            state_manager.add_run_step(
+                run_id=run_id,
+                step_id="graph-1",
+                step_type="graph",
+                message=f"Graph constructed with {len(all_nodes)} nodes and {len(links)} links",
+                status="done"
+            )
+
+        except Exception as e:
+            # Mark graph as done with error
+            state_manager.add_run_step(
+                run_id=run_id,
+                step_id="graph-1",
+                step_type="graph",
+                message=f"Failed to construct graph: {str(e)}",
+                status="done"
+            )
+            raise
 
     def _log_error(self, run_id: str, error_message: str) -> None:
         """Log error to state manager."""

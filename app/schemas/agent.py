@@ -25,9 +25,15 @@ class Paper(BaseModel):
     publication_year: Optional[int] = None
     topic: Optional[str] = None
 
+
+class Institution(BaseModel):
+    id: str
+    name: str
+
+
 class BasicProfessor(BaseModel):
     name: str
-    institution: Optional[str]
+    institution: Optional[Institution] = None
     description: Optional[str] = None
 
 class StepLog(BaseModel):
@@ -60,8 +66,8 @@ class GraphNode(BaseModel):
     """Node in the research graph"""
     id: str
     name: str
-    type: str  # "professor", "laboratory"
-    institution: Optional[str] = None # affiliated institution to the professor
+    type: str  # "professor", "laboratory", "user"
+    institution: Optional[Institution] = None  # affiliated institution to the professor
     description: str  # short description of the professor/lab
     contacts: Contact
     works_count: Optional[int] = None  # number of publications
