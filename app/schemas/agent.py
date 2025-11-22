@@ -17,14 +17,26 @@ class Source(BaseModel):
     url: str
     type: Literal["paper", "author", "institution", "concept"]
 
+
+class Paper(BaseModel):
+    title: str
+    link: Optional[str] = None
+    abstract: Optional[str] = None
+    publication_year: Optional[int] = None
+    topic: Optional[str] = None
+
 class StepLog(BaseModel):
     step_id: str
     step_type: Literal["intent", "filters", "search", "extraction", "relationships", "graph"]
     message: str
-    details: Optional[Dict[str, Any]] = None  # e.g. {"filters": ["Europe", "Robotics"]}
-    sources: List[Source] = []
     status: Literal["in_progress", "done", "pending"]
     timestamp: str
+
+    # Step-specific fields (only populated for relevant step types)
+    details: Optional[Dict[str, Any]] = None  # Deprecated, use specific fields below
+    filters: Optional[Dict[str, List[str]]] = None  # For "filters" step: {"topics": [...], "geographical_areas": [...]}
+    papers: Optional[List[Paper]] = None  # For "search" step: list of papers found
+    sources: Optional[List[Source]] = None  # For "extraction" step: sources of information
 
 
 class PersonHierarchy(BaseModel):
@@ -37,14 +49,6 @@ class PersonHierarchy(BaseModel):
 class Contact(BaseModel):
     email: Optional[str] = None
     website: Optional[str] = None
-
-
-class Paper(BaseModel):
-    title: str
-    link: Optional[str] = None
-    abstract: Optional[str] = None
-    publication_year: Optional[int] = None
-    topic: Optional[str] = None
 
 
 class GraphNode(BaseModel):

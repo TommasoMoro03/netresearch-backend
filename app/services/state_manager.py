@@ -51,9 +51,11 @@ class StateManager:
         step_id: str,
         step_type: str,
         message: str,
+        status: str = "done",
         details: Optional[Dict[str, Any]] = None,
-        sources: list = None,
-        status: str = "done"
+        filters: Optional[Dict[str, Any]] = None,
+        papers: Optional[list] = None,
+        sources: Optional[list] = None
     ) -> None:
         """
         Add a step log to a run.
@@ -63,20 +65,31 @@ class StateManager:
             step_id: Unique step identifier
             step_type: Type of step (intent, filters, search, extraction, relationships, graph)
             message: Human-readable message
-            details: Optional details dict (e.g., {"filters": ["Europe", "Robotics"]})
-            sources: List of source objects with title, url, type
             status: Step status (in_progress, done, pending)
+            details: Optional details dict (deprecated)
+            filters: For "filters" step: {"topics": [...], "geographical_areas": [...]}
+            papers: For "search" step: list of Paper objects
+            sources: For "extraction" step: list of Source objects
         """
         if run_id in self.run_store:
             step_log = {
                 "step_id": step_id,
                 "step_type": step_type,
                 "message": message,
-                "details": details,
-                "sources": sources or [],
                 "status": status,
                 "timestamp": datetime.utcnow().isoformat()
             }
+
+            # Add step-specific fields only if provided
+            if details is not None:
+                step_log["details"] = details
+            if filters is not None:
+                step_log["filters"] = filters
+            if papers is not None:
+                step_log["papers"] = papers
+            if sources is not None:
+                step_log["sources"] = sources
+
             self.run_store[run_id]["steps"].append(step_log)
 
     def set_run_graph(self, run_id: str, graph_data: Dict[str, Any]) -> None:

@@ -6,7 +6,9 @@ from datetime import datetime
 from typing import Optional
 from app.agents.models import AgentContext, ExtractedFilters
 from app.agents.intent_agent import IntentExtractionAgent
+from app.agents.search_agent import SearchAgent
 from app.services.state_manager import state_manager
+from app.utils.paper_mapper import get_preview_papers
 
 
 class ResearchAgentOrchestrator:
@@ -15,7 +17,7 @@ class ResearchAgentOrchestrator:
 
     Pipeline:
     1. Intent & Filter Extraction
-    2. OpenAlex Search (TODO)
+    2. OpenAlex Search
     3. Data Extraction (TODO)
     4. Relationship Building (TODO)
     5. Graph Construction (TODO)
@@ -23,6 +25,7 @@ class ResearchAgentOrchestrator:
 
     def __init__(self):
         self.intent_agent = IntentExtractionAgent()
+        self.search_agent = SearchAgent()
 
     def run(self, context: AgentContext) -> None:
         """
@@ -40,8 +43,10 @@ class ResearchAgentOrchestrator:
             # Step 1: Intent & Filter Extraction
             self._execute_intent_extraction(context)
 
-            # TODO: Add remaining steps
             # Step 2: OpenAlex Search
+            self._execute_search(context)
+
+            # TODO: Add remaining steps
             # Step 3: Data Extraction
             # Step 4: Relationship Building
             # Step 5: Graph Construction
@@ -89,11 +94,10 @@ class ResearchAgentOrchestrator:
                 step_id="filters-1",
                 step_type="filters",
                 message="Extracted research filters",
-                details={
+                filters={
                     "topics": filters.topics,
                     "geographical_areas": filters.geographical_areas
                 },
-                sources=[],
                 status="done"
             )
 
@@ -104,8 +108,58 @@ class ResearchAgentOrchestrator:
                 step_id="filters-1",
                 step_type="filters",
                 message=f"Failed to extract filters: {str(e)}",
-                details=None,
-                sources=[],
+                status="done"
+            )
+            raise
+
+    def _execute_search(self, context: AgentContext) -> None:
+        """
+        Step 2: Search for papers using OpenAlex API.
+        """
+        run_id = context.run_id
+
+        # Add initial "search" step (in_progress)
+        state_manager.add_run_step(
+            run_id=run_id,
+            step_id="search-1",
+            step_type="search",
+            message="Looking for relevant papers associated to your research...",
+            status="in_progress"
+        )
+
+        time.sleep(1)  # Brief pause for UX
+
+        try:
+            # Search papers using the agent (fetches 2 * max_nodes)
+            search_results = self.search_agent.search_papers(context)
+            papers_data = search_results.get("results", [])
+
+            # Store full papers data in context for later processing (extraction step)
+            context.papers_data = papers_data
+
+            # Map first 4 papers to Paper objects for frontend display
+            preview_papers = get_preview_papers(papers_data, limit=4)
+
+            # Convert Paper objects to dict for JSON serialization
+            preview_papers_dict = [paper.model_dump() for paper in preview_papers]
+
+            # Update the step to "done" with preview papers
+            state_manager.add_run_step(
+                run_id=run_id,
+                step_id="search-1",
+                step_type="search",
+                message=f"Found {len(papers_data)} relevant papers",
+                papers=preview_papers_dict,  # Only first 4 papers for frontend
+                status="done"
+            )
+
+        except Exception as e:
+            # Mark search as done with error
+            state_manager.add_run_step(
+                run_id=run_id,
+                step_id="search-1",
+                step_type="search",
+                message=f"Failed to search papers: {str(e)}",
                 status="done"
             )
             raise
@@ -113,18 +167,6 @@ class ResearchAgentOrchestrator:
     def _add_placeholder_steps(self, context: AgentContext) -> None:
         """Add placeholder steps for remaining pipeline stages."""
         run_id = context.run_id
-
-        # Search step
-        time.sleep(1)
-        state_manager.add_run_step(
-            run_id=run_id,
-            step_id="search-1",
-            step_type="search",
-            message="Searching OpenAlex for relevant research...",
-            details={"query_count": context.max_nodes},
-            sources=[],
-            status="done"
-        )
 
         # Extraction step
         time.sleep(1)

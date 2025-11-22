@@ -2,7 +2,7 @@
 Data models for agent operations.
 """
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 
 class ExtractedFilters(BaseModel):
@@ -21,3 +21,4 @@ class AgentContext(BaseModel):
 
     # Extracted information during execution
     filters: Optional[ExtractedFilters] = None
+    papers_data: Optional[List[Dict[str, Any]]] = None  # Full OpenAlex papers JSON for later processing
