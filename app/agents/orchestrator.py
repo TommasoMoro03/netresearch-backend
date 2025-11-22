@@ -91,8 +91,7 @@ class ResearchAgentOrchestrator:
                 message="Extracted research filters",
                 details={
                     "topics": filters.topics,
-                    "geographical_areas": filters.geographical_areas,
-                    "research_types": filters.research_types
+                    "geographical_areas": filters.geographical_areas
                 },
                 sources=[],
                 status="done"

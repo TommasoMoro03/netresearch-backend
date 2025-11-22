@@ -34,15 +34,32 @@ class PersonHierarchy(BaseModel):
     contact: Optional[str] = None  # email or linkedin URL
 
 
+class Contact(BaseModel):
+    email: Optional[str] = None
+    website: Optional[str] = None
+
+
+class Paper(BaseModel):
+    title: str
+    link: Optional[str] = None
+    abstract: Optional[str] = None
+    publication_year: Optional[int] = None
+    topic: Optional[str] = None
+
+
 class GraphNode(BaseModel):
     """Node in the research graph"""
     id: str
     name: str
-    type: str  # "professor", "laboratory", "paper", "institution", etc.
-    description: str  # short description of the node
-    sources: List[str] = []  # URLs where info was found
-    contacts: List[str] = []  # email or website URLs
-    hierarchy: Optional[List[PersonHierarchy]] = None  # for entities like labs
+    type: str  # "professor", "laboratory"
+    institution: Optional[str] = None # affiliated institution to the professor
+    description: str  # short description of the professor/lab
+    contacts: Contact
+    works_count: Optional[int] = None  # number of publications
+    cited_by_count: Optional[int] = None  # number of citations
+    h_index: Optional[int] = None  # h-index for professors
+    link_orcid: Optional[str] = None  # ORCID link for professors
+    papers: Optional[List[Paper]] = None  # list of papers
 
 
 class GraphLink(BaseModel):
