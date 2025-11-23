@@ -103,8 +103,18 @@ class OpenAlexClient:
         # Build filter string: concepts.id:ID1,concepts.id:ID2
         concept_filters = ",".join([f"concepts.id:{cid}" for cid in concept_ids])
 
+        # Calculate year range (last 2 years)
+        from datetime import datetime
+        current_year = datetime.now().year
+        start_year = current_year - 1
+        
+        # Add publication year filter
+        # filter=concepts.id:ID1|ID2,from_publication_date:2023-01-01
+        # OpenAlex supports range queries for years: publication_year:2023-2025
+        year_filter = f"publication_year:{start_year}-{current_year}"
+
         params = {
-            "filter": concept_filters,
+            "filter": f"{concept_filters},{year_filter}",
             "per-page": per_page,
             "page": page
         }
@@ -207,8 +217,14 @@ class OpenAlexClient:
             author_id = self.extract_author_id(author_id)
 
         url = f"{self.BASE_URL}/works"
+        # Calculate year range (last 2 years)
+        from datetime import datetime
+        current_year = datetime.now().year
+        start_year = current_year - 1
+        year_filter = f"publication_year:{start_year}-{current_year}"
+
         params = {
-            "filter": f"author.id:{author_id}",
+            "filter": f"author.id:{author_id},{year_filter}",
             "per-page": per_page
         }
 
