@@ -69,7 +69,7 @@ async def get_user_data():
     }
 
 
-@router.post("/clean")
+@router.post("/reset")
 async def clean_history():
     """
     Reset all data in the database (delete all users and runs).
