@@ -9,6 +9,7 @@ class ExtractedFilters(BaseModel):
     """Filters extracted from user query and CV"""
     topics: List[str]
     geographical_areas: List[str]  # ISO 3166-1 alpha-2 country codes (e.g., "CH", "US", "FR")
+    institutions: List[str]  # University/institution names mentioned in query
 
 
 class AgentContext(BaseModel):

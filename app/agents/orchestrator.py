@@ -95,7 +95,8 @@ class ResearchAgentOrchestrator:
                 message="Understanding your research interests...",
                 filters={
                     "topics": filters.topics,
-                    "geographical_areas": filters.geographical_areas
+                    "geographical_areas": filters.geographical_areas,
+                    "institutions": filters.institutions
                 },
                 status="in_progress"
             )
@@ -110,7 +111,8 @@ class ResearchAgentOrchestrator:
                 message="Understanding your research interests...",
                 filters={
                     "topics": filters.topics,
-                    "geographical_areas": filters.geographical_areas
+                    "geographical_areas": filters.geographical_areas,
+                    "institutions": filters.institutions
                 },
                 status="done"
             )
