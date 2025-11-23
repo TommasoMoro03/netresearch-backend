@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     # API Configuration
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "NetResearch"
+    
+    # OpenAI Configuration (for Whisper)
+    OPENAI_API_KEY: Optional[str] = Field(default=None, description="OpenAI API Key")
 
     # Together AI Configuration
     TOGETHER_API_KEY: Optional[str] = Field(
