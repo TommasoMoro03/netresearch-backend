@@ -152,7 +152,7 @@ class Database:
                     "graph_data": json.loads(row["graph_data"]) if row["graph_data"] else None
                 }
                 for row in rows
-            ]
+            ][::-1]
 
 
 # Global database instance
