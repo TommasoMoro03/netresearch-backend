@@ -3,8 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routers import cv, agent, email, user
 
 app = FastAPI(
-    title="DeepScience Agent API",
-    description="Backend API for DeepScience Agent - 3D Research Graph Visualization",
+    title="NetResearch Agent API",
+    description="Backend API for NetResearch Agent - 3D Research Graph Visualization",
     version="1.0.0"
 )
 
