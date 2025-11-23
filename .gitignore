@@ -43,3 +43,4 @@ Thumbs.db
 # Uploads
 app/uploads/*
 !app/uploads/.gitkeep
+.user_state.json

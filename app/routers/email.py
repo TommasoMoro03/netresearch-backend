@@ -46,6 +46,9 @@ async def generate_email(request: EmailGenerateRequest):
         cv_text = cv_data.get("text_preview", "")
         cv_concepts = cv_data.get("concepts", [])
         
+        # Get student name
+        student_name = state_manager.get_user_name()
+        
         # Generate email
         content = email_service.generate_email(
             email_type=request.email_type.value,
@@ -53,6 +56,7 @@ async def generate_email(request: EmailGenerateRequest):
             professor_context=request.professor_context,
             cv_text=cv_text,
             cv_concepts=cv_concepts,
+            student_name=student_name,
             recipient_name=request.recipient_name
         )
         

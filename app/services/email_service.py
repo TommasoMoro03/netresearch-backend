@@ -21,6 +21,7 @@ class EmailService:
         professor_context: str,
         cv_text: str,
         cv_concepts: list[str],
+        student_name: Optional[str] = None,
         recipient_name: Optional[str] = None
     ) -> str:
         """
@@ -32,6 +33,7 @@ class EmailService:
         concepts_str = ", ".join(cv_concepts)
         
         if email_type == "colab":
+            signature = f"\n{student_name}" if student_name else "\nA prospective collaborator"
             prompt = f"""
 Write a warm, personalized email from a motivated student to Professor {professor_name} asking about research collaboration opportunities.
 
@@ -51,11 +53,12 @@ INSTRUCTIONS:
 - Use a friendly but professional tone - you're a motivated student, not overly formal
 - DO NOT use placeholders like [Topic], [Your Name], or brackets
 - End with a warm closing like "Best regards" or "Warm regards"
-- Sign off simply as "A prospective collaborator" or similar
+- Sign off with EXACTLY this signature: "{signature}"
 
 Write the complete email now:
             """
         else: # reach_out
+            signature = f"\n{student_name}" if student_name else "\nA curious student"
             prompt = f"""
 Write a warm, friendly email from a curious student to Professor {professor_name} expressing interest in their work.
 
@@ -74,7 +77,7 @@ INSTRUCTIONS:
 - Tone should be friendly, curious, and respectful - like reaching out to learn from an expert
 - DO NOT use placeholders like [Topic], [Your Name], or brackets
 - End with a friendly closing
-- Sign off simply without requiring a specific name
+- Sign off with EXACTLY this signature: "{signature}"
 
 Write the complete email now:
             """

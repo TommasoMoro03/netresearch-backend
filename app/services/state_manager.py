@@ -8,6 +8,7 @@ class StateManager:
     def __init__(self):
         self.cv_store: Dict[str, Dict[str, Any]] = {}
         self.run_store: Dict[str, Dict[str, Any]] = {}
+        self.user_name: Optional[str] = None
 
     # CV Management
     def store_cv(self, cv_id: str, cv_data: Dict[str, Any]) -> None:
@@ -113,9 +114,19 @@ class StateManager:
         if run_id in self.run_store:
             self.run_store[run_id]["graph_data"] = graph_data
 
+
     def list_runs(self) -> Dict[str, Dict[str, Any]]:
         """List all runs."""
         return self.run_store
+
+    # User Management
+    def set_user_name(self, name: str) -> None:
+        """Store the user's name (in-memory only)."""
+        self.user_name = name
+
+    def get_user_name(self) -> Optional[str]:
+        """Retrieve the user's name."""
+        return self.user_name
 
 
 # Global state manager instance
