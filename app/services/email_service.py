@@ -1,6 +1,8 @@
-import openai
-from app.core.config import settings
 from typing import Optional
+from app.core.llm_factory import get_llm_config
+from pyagentspec import Agent
+from wayflowcore.agentspec import AgentSpecLoader
+
 
 class EmailService:
     """
@@ -8,11 +10,17 @@ class EmailService:
     """
 
     def __init__(self):
-        # Initialize OpenAI client for Together AI
-        # We use the helper from config to get the correct base_url and api_key
-        config = settings.get_openai_client_config()
-        self.client = openai.OpenAI(**config)
-        self.model = settings.MODEL_NAME
+        self.llm_config = get_llm_config()
+
+        # Create AgentSpec agent for email generation
+        self.spec_agent = Agent(
+            name="email_generator",
+            system_prompt="You are a helpful professional assistant writing academic emails.",
+            llm_config=self.llm_config
+        )
+
+        # Load with Wayflow
+        self.agent = AgentSpecLoader().load_component(self.spec_agent)
 
     def generate_email(
         self, 
@@ -83,18 +91,22 @@ Write the complete email now:
             """
 
         try:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": "You are a helpful professional assistant writing academic emails."},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.7,
-                max_tokens=600
-            )
-            
-            return response.choices[0].message.content.strip()
-            
+            # Start conversation
+            conv = self.agent.start_conversation()
+            conv.append_user_message(prompt)
+
+            # Execute
+            conv.execute()
+
+            # Get response
+            messages = conv.get_messages()
+            if not messages:
+                raise ValueError("No response from agent")
+
+            # Get last message
+            last_message = messages[-1]
+            return last_message.content.strip()
+
         except Exception as e:
             print(f"Error generating email: {e}")
             raise e
