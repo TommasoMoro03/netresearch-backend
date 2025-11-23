@@ -2,12 +2,22 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 from app.services.email_service import email_service
+from app.services.state_manager import state_manager
 
 router = APIRouter(prefix="/api/email", tags=["Email"])
 
+from enum import Enum
+
+class EmailType(str, Enum):
+    COLAB = "colab"
+    REACH_OUT = "reach_out"
+
 class EmailGenerateRequest(BaseModel):
-    topic: str
-    recipient_name: Optional[str] = "Colleague"
+    email_type: EmailType
+    cv_id: str
+    professor_name: str
+    professor_context: str
+    recipient_name: Optional[str] = None
 
 class EmailGenerateResponse(BaseModel):
     content: str
@@ -24,14 +34,34 @@ class EmailSendResponse(BaseModel):
 @router.post("/generate", response_model=EmailGenerateResponse)
 async def generate_email(request: EmailGenerateRequest):
     """
-    Generate an email based on a topic using LLM.
+    Generate an email based on type and context using LLM.
     """
     try:
-        content = email_service.generate_email(request.topic, request.recipient_name)
+        # Fetch CV data
+        cv_data = state_manager.get_cv(request.cv_id)
+        if not cv_data:
+            raise HTTPException(status_code=404, detail="CV not found")
+            
+        # Extract CV info
+        cv_text = cv_data.get("text_preview", "")
+        cv_concepts = cv_data.get("concepts", [])
+        
+        # Generate email
+        content = email_service.generate_email(
+            email_type=request.email_type.value,
+            professor_name=request.professor_name,
+            professor_context=request.professor_context,
+            cv_text=cv_text,
+            cv_concepts=cv_concepts,
+            recipient_name=request.recipient_name
+        )
+        
         return EmailGenerateResponse(
             content=content,
             message="Email generated successfully"
         )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

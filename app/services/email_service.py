@@ -14,34 +14,80 @@ class EmailService:
         self.client = openai.OpenAI(**config)
         self.model = settings.MODEL_NAME
 
-    def generate_email(self, topic: str, recipient_name: Optional[str] = "Colleague") -> str:
+    def generate_email(
+        self, 
+        email_type: str,
+        professor_name: str,
+        professor_context: str,
+        cv_text: str,
+        cv_concepts: list[str],
+        recipient_name: Optional[str] = None
+    ) -> str:
         """
-        Generate an email draft based on a topic.
-        
-        Args:
-            topic: The subject or topic of the email.
-            recipient_name: Name of the recipient (optional).
-            
-        Returns:
-            Generated email content.
+        Generate an email draft based on type and context.
         """
-        prompt = f"""
-        You are a professional assistant. Write a professional email to {recipient_name} about the following topic:
+        recipient = recipient_name or professor_name
         
-        Topic: {topic}
+        # Prepare context string from CV
+        concepts_str = ", ".join(cv_concepts)
         
-        The email should be concise, polite, and professional.
-        """
+        if email_type == "colab":
+            prompt = f"""
+Write a warm, personalized email from a motivated student to Professor {professor_name} asking about research collaboration opportunities.
+
+STUDENT'S BACKGROUND (from their CV):
+- Research interests and skills: {concepts_str}
+- Brief experience: {cv_text[:500] if cv_text else "Early-career researcher"}
+
+PROFESSOR'S WORK:
+{professor_context}
+
+INSTRUCTIONS:
+- Start with a warm, genuine greeting (e.g., "Dear Professor {professor_name}")
+- Express specific enthusiasm about their work based on the context provided
+- Connect your background/interests to their research in a natural way
+- Ask if they have any research opportunities or would be open to collaboration
+- Keep it concise (3-4 short paragraphs)
+- Use a friendly but professional tone - you're a motivated student, not overly formal
+- DO NOT use placeholders like [Topic], [Your Name], or brackets
+- End with a warm closing like "Best regards" or "Warm regards"
+- Sign off simply as "A prospective collaborator" or similar
+
+Write the complete email now:
+            """
+        else: # reach_out
+            prompt = f"""
+Write a warm, friendly email from a curious student to Professor {professor_name} expressing interest in their work.
+
+PROFESSOR'S WORK:
+{professor_context}
+
+STUDENT'S INTERESTS:
+{concepts_str}
+
+INSTRUCTIONS:
+- Start with a warm greeting (e.g., "Dear Professor {professor_name}")
+- Mention something specific from their work that caught your attention
+- Ask thoughtful questions or request learning resources related to their research
+- Show genuine curiosity and enthusiasm
+- Keep it brief (2-3 short paragraphs)
+- Tone should be friendly, curious, and respectful - like reaching out to learn from an expert
+- DO NOT use placeholders like [Topic], [Your Name], or brackets
+- End with a friendly closing
+- Sign off simply without requiring a specific name
+
+Write the complete email now:
+            """
 
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
-                    {"role": "system", "content": "You are a helpful professional assistant."},
+                    {"role": "system", "content": "You are a helpful professional assistant writing academic emails."},
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.7,
-                max_tokens=500
+                max_tokens=600
             )
             
             return response.choices[0].message.content.strip()
