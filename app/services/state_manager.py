@@ -55,6 +55,7 @@ class StateManager:
         details: Optional[Dict[str, Any]] = None,
         filters: Optional[Dict[str, Any]] = None,
         papers: Optional[list] = None,
+        professors: Optional[list] = None,
         sources: Optional[list] = None
     ) -> None:
         """
@@ -69,6 +70,7 @@ class StateManager:
             details: Optional details dict (deprecated)
             filters: For "filters" step: {"topics": [...], "geographical_areas": [...]}
             papers: For "search" step: list of Paper objects
+            professors: For "extraction" step: list of BasicProfessor objects
             sources: For "extraction" step: list of Source objects
         """
         if run_id in self.run_store:
@@ -87,6 +89,8 @@ class StateManager:
                 step_log["filters"] = filters
             if papers is not None:
                 step_log["papers"] = papers
+            if professors is not None:
+                step_log["professors"] = professors
             if sources is not None:
                 step_log["sources"] = sources
 

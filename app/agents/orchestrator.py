@@ -180,7 +180,7 @@ class ResearchAgentOrchestrator:
             run_id=run_id,
             step_id="extraction-1",
             step_type="extraction",
-            message="Extracting professors from papers...",
+            message="Extracting professors relevant to your research...",
             status="in_progress"
         )
 
