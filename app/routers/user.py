@@ -69,8 +69,8 @@ async def get_user_data():
     }
 
 
-@router.post("/reset")
-async def reset_database():
+@router.post("/clean")
+async def clean_history():
     """
     Reset all data in the database (delete all users and runs).
     """
@@ -82,12 +82,12 @@ async def reset_database():
         state_manager.user_name = None
 
         return {
-            "message": "Database reset successfully",
+            "message": "History cleaned successfully",
             "status": "success"
         }
     except Exception as e:
         return {
-            "message": f"Failed to reset database: {str(e)}",
+            "message": f"Failed to clean history: {str(e)}",
             "status": "error"
         }
 
